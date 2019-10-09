@@ -25,16 +25,16 @@ public class Compressor {
     }
 
     public static Map<String, Integer> contaCaracteres(String texto) {
-        Map<String, Integer> map = new TreeMap<>();
+        Map<String, Integer> treemap = new TreeMap<>();
         for(char c: texto.toCharArray()) {
-            Integer i = map.get(String.valueOf(c));
-            if (i != null) {
-                map.put(String.valueOf(c), i+1);
+            Integer i = treemap.get(String.valueOf(c));
+            if (i == null) {
+                treemap.put(String.valueOf(c), 1);
             }else {
-                map.put(String.valueOf(c), 1);
+                treemap.put(String.valueOf(c), i+1);
             }
         }
-        return map;
+        return treemap;
     }
 
     public static void imprimirCaracteres(Map<String,Integer> map) {
