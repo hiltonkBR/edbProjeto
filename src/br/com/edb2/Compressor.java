@@ -1,20 +1,19 @@
 package br.com.edb2;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Compressor {
 
-    public Compressor (String arquivo, String arquivoEDZ, String arquivoEDT) throws IOException {
+    public Compressor (String arquivo, String arquivoFinal, String dicionario) throws IOException {
 
         Node no = Compressor.iniciaCompressor(arquivo,",","");
-        HashMap<Character, String> codeMap = geraDicionario(no);
-        imprimir(codeMap);
-        String teste = geraArquivoComprimido(arquivo, codeMap);
-        System.out.println("\n" +teste);
-
+        HashMap<Character, String> MapaDicionario = geraDicionario(no);
+        imprimir(MapaDicionario);
+        String compactado = geraComprimido(arquivo, MapaDicionario);
+        geraArquivoComprimido(geraBinario(compactado), arquivoFinal);
+        geraArquivoDicionario(geraBinarioDicionario(MapaDicionario), dicionario);
+        System.out.println("\n" +compactado);
 
     }
 
@@ -104,39 +103,75 @@ public class Compressor {
     private void geraBinarioDicionario(HashMap<Character, String> map , Node heap, String binario){
         if (heap.getLetter() != null) {
             int tmp = heap.getLetter();
-
             char tmp2 = (char)tmp;
             map.put(tmp2, binario);
         }
         if (heap.getLeft() != null) {
-            String byteCodAux = binario + '0';
-            geraBinarioDicionario(map, heap.getLeft(), byteCodAux);
+            String binarioAux = binario + '0';
+            geraBinarioDicionario(map, heap.getLeft(), binarioAux);
         }
         if (heap.getRight() != null) {
-            String byteCodAux = binario + '1';
-            geraBinarioDicionario(map, heap.getRight(), byteCodAux);
+            String binarioAux = binario + '1';
+            geraBinarioDicionario(map, heap.getRight(), binarioAux);
         }
     }
 
-    private String geraArquivoComprimido(String arquivo, HashMap<Character, String> dicionario) throws IOException {
-        FileReader rdr = new FileReader(arquivo);
-        BufferedReader brdr = new BufferedReader(rdr);
-        int contentIn = brdr.read();
-        StringBuffer contenteEncriptedOut = new StringBuffer();
-        while (contentIn != -1) {
-            Character key = (char) contentIn;
-            if(key == (char)10) {
-                contenteEncriptedOut.append(dicionario.get((char) 260));
-            }else{
-                contenteEncriptedOut.append(dicionario.get(key));
+    private byte[] geraBinario(String compactado) {
+        BitSet bit = new BitSet();
+        for (int i = 0; i < compactado.length(); ++i){
+            if(compactado.charAt(i) == '1'){
+                bit.set(i);
             }
-            contentIn = brdr.read();
-            }
-        contenteEncriptedOut.append(dicionario.get((char)261));
-        rdr.close();
-        brdr.close();
-        return contenteEncriptedOut.toString();
+        }
+        return bit.toByteArray();
     }
+
+    private String geraComprimido(String arquivo, HashMap<Character, String> dicionario) throws IOException {
+        FileReader leitor = new FileReader(arquivo);
+        BufferedReader buLeitor = new BufferedReader(leitor);
+        int conteudo = buLeitor.read();
+        StringBuffer compactado = new StringBuffer();
+        while (conteudo != -1) {
+            Character key = (char) conteudo;
+            if(key == (char)10) {
+                compactado.append(dicionario.get((char) 260));
+            }else{
+                compactado.append(dicionario.get(key));
+            }
+            conteudo = buLeitor.read();
+            }
+        compactado.append(dicionario.get((char)261));
+        leitor.close();
+        buLeitor.close();
+        return compactado.toString();
+    }
+
+    private String geraBinarioDicionario(HashMap<Character, String> dicionario) {
+        StringBuffer conteudo = new StringBuffer();
+        Iterator interador = dicionario.entrySet().iterator();
+        while(interador.hasNext()){
+            Map.Entry mapElement = (Map.Entry)interador.next();
+            conteudo.append(mapElement.getKey()).append(mapElement.getValue());
+            if (interador.hasNext())
+                conteudo.append('\n');
+        }
+        return conteudo.toString();
+    }
+
+    private void geraArquivoComprimido(byte[] compactado, String arquivoFinal) throws IOException {
+        FileOutputStream saida = new FileOutputStream(arquivoFinal);
+        saida.write(compactado);
+        saida.close();
+    }
+
+    private void geraArquivoDicionario(String tableCode, String fileEDT) throws IOException {
+        FileOutputStream fileOutEDT = new FileOutputStream(fileEDT);
+        for (int i = 0; i < tableCode.length(); ++i){
+            fileOutEDT.write(tableCode.charAt(i));
+        }
+        fileOutEDT.close();
+    }
+
 }
 
 
