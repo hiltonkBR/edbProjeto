@@ -17,6 +17,16 @@ public class Heap {
         this.capacity = capacity;
     }
 
+
+    public boolean isLeaf(Node node){
+        if(node.getLeft() == null && node.getRight() == null){
+            return true;
+        }else
+        {
+            return false;
+        }
+    }
+
     public void insert(Integer letter, Integer count) {
         insert(new Node(letter, count));
     }
