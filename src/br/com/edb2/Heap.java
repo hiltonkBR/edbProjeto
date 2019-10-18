@@ -1,6 +1,9 @@
 package br.com.edb2;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Heap {
     private Node[] nodes;
@@ -18,24 +21,30 @@ public class Heap {
     }
 
 
-    public boolean isLeaf(Node node){
-        if(node.getLeft() == null && node.getRight() == null){
-            return true;
-        }else
-        {
-            return false;
-        }
-    }
-
-    public void insert(Integer letter, Integer count) {
-        insert(new Node(letter, count));
-    }
-
     public void insert(Node node) {
         ensureCapacity();
         nodes[getSize()] = node;
         heapifyUp(getSize());
         size++;
+    }
+
+    public void insert(HashMap<Character, Integer> hashmap) {
+        Iterator it = hashmap.entrySet().iterator();
+
+        while(it.hasNext()){
+            Map.Entry mapElement = (Map.Entry)it.next();
+            this.insert(new Node(mapElement.getKey(), mapElement.getValue() ));
+        }
+    }
+    private void ensureCapacity() {
+        if (this.size == capacity) {
+            this.nodes = Arrays.copyOf(this.nodes, this.capacity * 2);
+            this.capacity = this.capacity * 2;
+        }
+    }
+
+    public int getParentIndex(int index) {
+        return (int) Math.floor((index - 1) / 2);
     }
 
     private void heapifyUp(int index) {
@@ -45,26 +54,17 @@ public class Heap {
             return;
         }
 
-        Node pai    = nodes[parentIndex];
-        Node pessoa = nodes[index];
+        Node pai    = this.nodes[parentIndex];
+        Node pessoa = this.nodes[index];
 
         if (pessoa.getCount() < pai.getCount()) {
-            nodes[index]   = pai;
-            nodes[parentIndex] = pessoa;
+            this.nodes[index]   = pai;
+            this.nodes[parentIndex] = pessoa;
             heapifyUp(parentIndex);
         }
     }
 
-    public int getParentIndex(int index) {
-        return (int) Math.floor((index - 1) / 2);
-    }
 
-    private void ensureCapacity() {
-        if (size == capacity) {
-            nodes = Arrays.copyOf(nodes, capacity * 2);
-            capacity = capacity * 2;
-        }
-    }
 
     public int getSize() {
         return size;
@@ -74,13 +74,21 @@ public class Heap {
         if (getSize() == 0) {
             return null;
         }
-        return nodes[0];
+        return this.nodes[0];
     }
 
     public Node peekRemove(){
         Node aux = this.peek();
         this.remove();
         return aux;
+    }
+    public Node poll() {
+        if (getSize() == 0) {
+            return null;
+        }
+        Node n = nodes[0];
+        this.remove();
+        return n;
     }
 
     public void remove() {
@@ -104,16 +112,25 @@ public class Heap {
         }
 
         if (rightChild < getSize()) {
-            if (nodes[rightChild].getCount() < nodes[leftChild].getCount()) {
+            if (this.nodes[rightChild].getCount() < this.nodes[leftChild].getCount()) {
                 childIndex = rightChild;
             }
         }
 
-        if (nodes[index].getCount() > nodes[childIndex].getCount()) {
-            Node tmp          = nodes[index];
-            nodes[index]      = nodes[childIndex];
-            nodes[childIndex] = tmp;
+        if (this.nodes[index].getCount() > this.nodes[childIndex].getCount()) {
+            Node tmp          = this.nodes[index];
+            this.nodes[index]      = this.nodes[childIndex];
+            this.nodes[childIndex] = tmp;
             heapifyDown(childIndex);
         }
+    }
+
+    public Node criaArvore(){
+        while(this.getSize() > 1){
+            Node left = poll();
+            Node rigth = poll();
+            insert(new Node ((left.getCount() + rigth.getCount()), left, rigth));
+        }
+        return poll();
     }
 }

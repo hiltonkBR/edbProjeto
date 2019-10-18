@@ -5,57 +5,33 @@ import java.util.*;
 
 public class Compressor {
 
-    public Compressor (String arquivo, String arquivoFinal, String dicionario) throws IOException {
+    public Compressor (String arquivo, String arquivoFinal, String arquivoDicionario) throws IOException {
 
-        Node no = Compressor.iniciaCompressor(arquivo,",","");
-        HashMap<Character, String> MapaDicionario = geraDicionario(no);
-        imprimir(MapaDicionario);
-        String compactado = geraComprimido(arquivo, MapaDicionario);
+        HashMap<Character, Integer> MapaDicionario = new HashMap<> (this.contaCaracteres(arquivo));
+
+        Heap heap = new Heap();
+        heap.insert(MapaDicionario);
+        Node no = heap.criaArvore();
+
+        HashMap<Character, String> dicionario = geraDicionario(no);
+        String compactado = geraComprimido(arquivo, dicionario);
         geraArquivoComprimido(geraBinario(compactado), arquivoFinal);
-        geraArquivoDicionario(geraBinarioDicionario(MapaDicionario), dicionario);
-        System.out.println("\n" +compactado);
-
+        geraArquivoDicionario(geraBinarioDicionario(dicionario), arquivoDicionario);
     }
 
+    private HashMap<Character, Integer> contaCaracteres(String arquivo) throws IOException {
+        HashMap<Character, Integer> contadorChar = new HashMap<>();
+        FileInputStream leitor = new FileInputStream(arquivo);
 
-    public static Node iniciaCompressor(String arquivo, String arquivoFinal, String dicionario) throws IOException {
-        FileReader arquivoOriginal = null;
-        try{
-            arquivoOriginal = new FileReader(arquivo);
-
-                BufferedReader stringDOarquivo = new BufferedReader(arquivoOriginal);
-                return contaCaracteres(stringDOarquivo);
-
-    }catch (IOException e){
-        return null;
+        int conteudo = leitor.read();
+        while (conteudo != -1) {
+            Character key = (char) conteudo;
+            contadorChar.computeIfPresent(key, (Character character, Integer repete) -> ++repete);
+            contadorChar.putIfAbsent(key, 1);
+            conteudo = leitor.read();
         }
-    }
-
-    public static Node contaCaracteres(BufferedReader leitor) throws IOException {
-        Map<Character, Integer> treemap = new TreeMap<>();
-        String texto = leitor.readLine();
-        while(texto != null){
-            for (char c : texto.toCharArray()) {
-                Integer i = treemap.get(c);
-                if (i == null) {
-                    treemap.put(c, 1);
-                } else {
-                    treemap.put(c, i + 1);
-                }
-            }
-            texto = leitor.readLine();
-            if(texto != null){
-                Integer i = treemap.get((char)260); // \n
-                if (i == null) {
-                    treemap.put((char)260, 1);
-                } else {
-                    treemap.put((char)260, i + 1);
-                }
-            }
-        }
-        treemap.put((char)261, 1); // EOF
-        //System.out.println(treemap);
-        return tree(treemap);
+        leitor.close();
+        return contadorChar;
     }
 
     public static void imprimirCaracteres(Map<Character, Integer> map) {
@@ -63,8 +39,9 @@ public class Compressor {
             System.out.println(m.getKey() + " : " + m.getValue());
         }
     }
-    public static void imprimir(HashMap<Character, String> codeMap) {
-        for (Map.Entry<Character, String> m : codeMap.entrySet()) {
+
+    public static void imprimir(HashMap<Character, Integer> codeMap) {
+        for (Map.Entry<Character, Integer> m : codeMap.entrySet()) {
             int a= m.getKey();
             char b = (char) a;
             System.out.println(b + " : " + m.getValue());
@@ -72,47 +49,24 @@ public class Compressor {
 
     }
 
-    public static Node tree(Map<Character, Integer> map){
-
-        Heap heap = new Heap();
-        Node tree = new Node();
-
-        for (Map.Entry<Character, Integer> m : map.entrySet()) {
-            heap.insert(new Node((int)m.getKey() , m.getValue()));
-        }
-
-        if(heap.getSize() < 1){
-            }else{
-                while(heap.getSize() > 1){
-                    Node left = heap.peekRemove();
-                    Node right= heap.peekRemove();
-                    tree = new Node(left.getCount()+right.getCount(), left, right);
-                    heap.insert(tree);
-                }
-            }
-        return tree;
-    }
-
     private HashMap<Character, String> geraDicionario(Node node){
-        HashMap<Character, String> codeMap = new HashMap<>();
+        HashMap<Character, String> mapa = new HashMap<>();
         String byteCode = new String();
-        geraBinarioDicionario(codeMap, node, byteCode);
-        return codeMap;
+        geraBinarioDicionario(mapa, node, byteCode);
+        return mapa;
     }
 
-    private void geraBinarioDicionario(HashMap<Character, String> map , Node heap, String binario){
-        if (heap.getLetter() != null) {
-            int tmp = heap.getLetter();
-            char tmp2 = (char)tmp;
-            map.put(tmp2, binario);
+    private void geraBinarioDicionario(HashMap<Character, String> mapa , Node no, String binario){
+        if (no.getLetter() != null) {
+            mapa.put(no.getLetter(), binario);
         }
-        if (heap.getLeft() != null) {
+        if (no.getLeft() != null) {
             String binarioAux = binario + '0';
-            geraBinarioDicionario(map, heap.getLeft(), binarioAux);
+            geraBinarioDicionario(mapa, no.getLeft(), binarioAux);
         }
-        if (heap.getRight() != null) {
+        if (no.getRight() != null) {
             String binarioAux = binario + '1';
-            geraBinarioDicionario(map, heap.getRight(), binarioAux);
+            geraBinarioDicionario(mapa, no.getRight(), binarioAux);
         }
     }
 
@@ -131,18 +85,16 @@ public class Compressor {
         BufferedReader buLeitor = new BufferedReader(leitor);
         int conteudo = buLeitor.read();
         StringBuffer compactado = new StringBuffer();
+
         while (conteudo != -1) {
             Character key = (char) conteudo;
-            if(key == (char)10) {
-                compactado.append(dicionario.get((char) 260));
-            }else{
-                compactado.append(dicionario.get(key));
-            }
+            compactado.append(dicionario.get(key));
             conteudo = buLeitor.read();
-            }
-        compactado.append(dicionario.get((char)261));
+        }
+
         leitor.close();
         buLeitor.close();
+        //compactado.append(dicionario.get((char)3));
         return compactado.toString();
     }
 
@@ -152,9 +104,8 @@ public class Compressor {
         while(interador.hasNext()){
             Map.Entry mapElement = (Map.Entry)interador.next();
             conteudo.append(mapElement.getKey()).append(mapElement.getValue());
-            if (interador.hasNext())
-                conteudo.append('\n');
         }
+        conteudo.append((char)1);
         return conteudo.toString();
     }
 
@@ -164,16 +115,12 @@ public class Compressor {
         saida.close();
     }
 
-    private void geraArquivoDicionario(String tableCode, String fileEDT) throws IOException {
-        FileOutputStream fileOutEDT = new FileOutputStream(fileEDT);
-        for (int i = 0; i < tableCode.length(); ++i){
-            fileOutEDT.write(tableCode.charAt(i));
+    private void geraArquivoDicionario(String dicionario, String arquivoDicionario) throws IOException {
+        FileOutputStream saida = new FileOutputStream(arquivoDicionario);
+        for (int i = 0; i < dicionario.length(); ++i){
+            saida.write(dicionario.charAt(i));
         }
-        fileOutEDT.close();
+        saida.close();
     }
 
 }
-
-
-
-

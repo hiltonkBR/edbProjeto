@@ -3,7 +3,7 @@ package br.com.edb2;
 //import org.jetbrains.annotations.NotNull;
 
 public class Node{
-    private Integer letter;
+    private Character letter;
     private Integer count;
 
     private Node left;
@@ -16,9 +16,9 @@ public class Node{
         this.right = null;
     }
 
-    public Node(Integer letter, Integer count) {
-        this.letter = letter;
-        this.count = count;
+    public Node(Object letter, Object count) {
+        this.letter = (Character)letter;
+        this.count = (Integer) count;
     }
 
     public Node(Integer count, Node left, Node right) {
@@ -27,11 +27,11 @@ public class Node{
         this.right = right;
     }
 
-    public Integer getLetter() {
+    public Character getLetter() {
         return letter;
     }
 
-    public void setLetter(Integer letter) {
+    public void setLetter(Character letter) {
         this.letter = letter;
     }
 
