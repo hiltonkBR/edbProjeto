@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="edbProjeto:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/edbProjeto_jar</output-path>
+    <root id="archive" name="edbProjeto.jar">
+      <element id="module-output" name="edbProjeto" />
+    </root>
+  </artifact>
+</component>
